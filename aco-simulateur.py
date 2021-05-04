@@ -12,7 +12,7 @@ import threading
 from functools import reduce
 
 
-class Aco(object):
+class Simulateur(object):
 
     # Initialise les paramètres
     def __init__(self):
@@ -20,14 +20,13 @@ class Aco(object):
         self.initialise_canvas()
         self.initialise_position()
         self.initialise_events()
-        self.cout_search()
+        #self.cout_search()
         self.tkinter.mainloop()
 
     # initialise donnée
     def initialise_data(self):
         self.round = 6
         self.ant_num = 50
-        self.iterator = 0
         self.width = 800
         self.height = 400
         self.running = False
@@ -63,6 +62,35 @@ class Aco(object):
                     {"x": 377, "y": 330, "nest": False, "food": False},
                     {"x": 75, "y": 230, "nest": True, "food": False}
                 ]
+            },
+            "tsp": {
+                "title": " Travelling Salesman Problem",
+                "path": [
+                    {"x": 75, "y": 230, "nest": False, "food": False},
+                    {"x": 200, "y": 150, "nest": False, "food": False},
+                    {"x": 220, "y": 220, "nest": False, "food": False},
+                    {"x": 377, "y": 90, "nest": False, "food": False},
+                    {"x": 200, "y": 150, "nest": False, "food": False},
+                    {"x": 377, "y": 90, "nest": False, "food": False},
+                    {"x": 365, "y": 250, "nest": False, "food": False},
+                    {"x": 377, "y": 90, "nest": False, "food": False},
+                    {"x": 530, "y": 150, "nest": False, "food": False},
+                    {"x": 365, "y": 250, "nest": False, "food": False},
+                    {"x": 530, "y": 150, "nest": False, "food": False},
+                    {"x": 680, "y": 230, "nest": False, "food": False},
+                    {"x": 377, "y": 330, "nest": False, "food": False},
+                    {"x": 75, "y": 230, "nest": False, "food": False},
+                    {"x": 365, "y": 250, "nest": False, "food": False},
+                    {"x": 680, "y": 230, "nest": False, "food": False},
+                    {"x": 365, "y": 250, "nest": False, "food": False},
+                    {"x": 377, "y": 330, "nest": False, "food": False},
+                    {"x": 75, "y": 230, "nest": False, "food": False},
+                    {"x": 365, "y": 250, "nest": False, "food": False},
+                    {"x": 220, "y": 220, "nest": False, "food": False},
+                    {"x": 377, "y": 330, "nest": False, "food": False},
+                    {"x": 220, "y": 220, "nest": False, "food": False},
+                    {"x": 75, "y": 230, "nest": False, "food": False}
+                ]
             }
         }
 
@@ -78,7 +106,7 @@ class Aco(object):
             yscrollincrement=1
         )
 
-        #self.ant_gif = tkinter.PhotoImage(file='images/ant.png')
+        self.ant_gif = tkinter.PhotoImage(file='images/ant.png')
         self.canvas.pack()
 
     # création les lignes sur cavancs
@@ -91,6 +119,7 @@ class Aco(object):
         # initialise les texts du keyboard
         self.canvas.create_text(120, 25, text='c: recherche court chemin', font=("Purisa", 18), fill='black')
         self.canvas.create_text(360, 25, text='l: recherche longueur chemin', font=("Purisa", 18), fill='black')
+        self.canvas.create_text(80, 50, text='t: recherche tsp', font=("Purisa", 18), fill='black')
         self.canvas.create_text(580, 25, text='s: arrête le recherche', font=("Purisa", 18), fill='black')
         self.canvas.create_text(720, 25, text='q: quitte', font=("Purisa", 18), fill='black')
 
@@ -133,11 +162,15 @@ class Aco(object):
     def initialise_events(self):
         self.tkinter.bind("c", self.cout_search)
         self.tkinter.bind("l", self.long_search)
+        self.tkinter.bind("t", self.tsp_search)
         self.tkinter.bind("s", self.stop_search)
         self.tkinter.bind("q", self.quite_search)
 
     # génére les positions dans le cavans
     def initialise_position(self):
+
+        self.iterator = 0
+
         for type in self.citys:
             self.ants[type] = {}
 
@@ -173,14 +206,19 @@ class Aco(object):
                 self.ants[type][i]['current_city'] = None
                 self.ants[type][i]['total_distence'] = 0.0
 
-    # recherche le meilleur chemin
+    # parcourir toutes les fourmis vers chaque chemin
     def search_path(self, type):
 
+        num_fourmi_path = 0
         for i in self.ants[type]:
             if not self.ants[type][i]['is_stop']:
                 self.cacule_next_city(type, i)
                 self.move_next_city(type, i)
 
+                if i+1 < len(self.ants[type]) and (self.ants[type][i]['current_path'] == self.ants[type][i+1]['current_path']):
+                    num_fourmi_path += 1
+
+        #print("test", num_fourmi_path)
         self.iterator += 1
 
     # calcule le pheromone du chemin
@@ -222,7 +260,7 @@ class Aco(object):
 
         return self.citys[type]['path'][idx]
 
-    # calcule le chemin par le maximum phéromone de villes
+    # calcule le position de la ville suivante
     def cacule_next_city(self, type, ant_index):
 
         # le pheromone par chemin
@@ -235,7 +273,7 @@ class Aco(object):
                 nourriture_index = i
                 break
 
-        # initialise la ville départi
+        # initialise la ville départ
         start_end_pos = [0, longeureu_chemin - 1]
         if self.ants[type][ant_index]['current_city'] is None:
 
@@ -243,6 +281,7 @@ class Aco(object):
             if ant_index % 2 == 0:
                 self.ants[type][ant_index]['current_city'] = self.citys[type]['path'][
                     start_end_pos[random.randint(0, 1)]]
+
             else:
                 # cacule le pheromone par chemin
                 self.ants[type][ant_index]['current_city'] = self.cacule_chemin_pheromone(type, ant_index,
@@ -279,7 +318,7 @@ class Aco(object):
             # self.ants[type][ant_index]['next_city'] = self.ants[type][ant_index]['next_city']
             return
 
-    # deplace les fourmis sur les donnée dynamiques
+    # deplace les fourmis
     def move_next_city(self, type, ant_index):
 
         current_city_index = self.ants[type][ant_index]['current_city']['index']
@@ -289,9 +328,13 @@ class Aco(object):
             # update path visited
             self.update_path(type, self.ants[type][ant_index]['current_city'], ant_index)
             self.update_path(type, self.ants[type][ant_index]['next_city'], ant_index)
+
             print('Itération:', self.iterator, 'Chemins du fourmi -', self.ants[type][ant_index]['current_id'], ': ',
                   self.ants[type][ant_index]['current_path'], 'Pheromone:',
                   self.citys[type]['path'][current_city_index]['pheromone'])
+
+            # print(self.ants[type][ant_index])
+            # exit()
 
             self.stop_search()
             return
@@ -313,7 +356,7 @@ class Aco(object):
         self.ants[type][ant_index]['count'] += 1
 
         print('Itération:', self.iterator, 'Chemins du fourmi -', self.ants[type][ant_index]['current_id'], ': ',
-              self.ants[type][ant_index]['current_path'], 'Pheromone:',
+              self.ants[type][ant_index]['current_path'], current_city_index, 'Pheromone:',
               self.citys[type]['path'][current_city_index]['pheromone'])
 
     # update path visited
@@ -329,6 +372,10 @@ class Aco(object):
         self.running = False
         self.thread_lock.release()
         self.tkinter.destroy()
+
+    # commence à la recherche tsp
+    def tsp_search(self, evt=None):
+        self.initialise_lines('tsp')
 
     # commence à la recherche par les chemins même longeure
     def cout_search(self, evt=None):
@@ -361,4 +408,4 @@ class Aco(object):
             self.search_path(type)
 
 if __name__ == '__main__':
-    Aco()
+    Simulateur()

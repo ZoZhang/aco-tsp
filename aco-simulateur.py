@@ -20,7 +20,7 @@ class Simulateur(object):
         self.initialise_canvas()
         self.initialise_position()
         self.initialise_events()
-        #self.cout_search()
+        self.cout_search()
         self.tkinter.mainloop()
 
     # initialise donnée
@@ -106,7 +106,7 @@ class Simulateur(object):
             yscrollincrement=1
         )
 
-        self.ant_gif = tkinter.PhotoImage(file='images/ant.png')
+        #self.ant_gif = tkinter.PhotoImage(file='images/ant.png')
         self.canvas.pack()
 
     # création les lignes sur cavancs
